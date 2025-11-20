@@ -1,0 +1,194 @@
+@model PlataformaInvestimentos.Models.RendaFixa
+
+@{
+    ViewData["Title"] = "Adicionar Renda Fixa";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h3 class="mb-4 text-center">
+                    <i data-lucide="banknote" class="me-2 align-middle" style="width: 28px; height: 28px;"></i> Adicionar Renda Fixa
+                </h3>
+
+                <form asp-action="Create">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
+
+                    <div class="mb-3">
+                        <label asp-for="Emissor" class="form-label fw-semibold">
+                            <i data-lucide="type" class="me-1"></i> Emissor
+                        </label>
+                        <input asp-for="Emissor" class="form-control" />
+                        <span asp-validation-for="Emissor" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DataCompra" class="form-label fw-semibold">
+                            <i data-lucide="calendar" class="me-1"></i> Data da Compra
+                        </label>
+                        <input asp-for="DataCompra" class="form-control" type="date" id="DataCompra" />
+                        <span asp-validation-for="DataCompra" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-semibold d-flex align-items-center" style="font-size: 0.9rem;">
+                            <i class="me-1" style="font-size: 1rem;"></i> Liquidez Diária
+                            <div class="form-check form-switch ms-2 mb-0 d-flex align-items-center">
+                                <input class="form-check-input toggle-black" type="checkbox"
+                                       id="ToggleLiquidez" name="ToggleLiquidez" />
+                            </div>
+                        </label>
+                    </div>
+
+                    <div class="mb-3" id="DataVencimentoGroup">
+                        <label asp-for="DataVencimento" class="form-label fw-semibold">
+                            <i data-lucide="calendar" class="me-1"></i> Data de Vencimento
+                        </label>
+                        <input asp-for="DataVencimento" class="form-control" type="date" id="DataVencimento" />
+                        <span asp-validation-for="DataVencimento" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Valor" class="form-label fw-semibold">
+                            <i data-lucide="dollar-sign" class="me-1"></i> Valor Total (R$)
+                        </label>
+                        <input asp-for="Valor" class="form-control preco-input" />
+                        <span asp-validation-for="Valor" class="text-danger small"></span>
+                    </div>
+
+                    <!-- Forma -->
+                    <div class="mb-3">
+                        <label for="Forma" class="form-label fw-semibold">
+                            <i data-lucide="shuffle" class="me-1"></i> Forma
+                        </label>
+                        <select id="Forma" name="Forma" class="form-select">
+                            <option value="pre" selected>Pré-fixado</option>
+                            <option value="pos">Pós-fixado</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Taxa" id="TaxaLabel" class="form-label fw-semibold">
+                            <i data-lucide="percent" class="me-1"></i> Taxa
+                        </label>
+                        <input asp-for="Taxa" class="form-control" id="Taxa" inputmode="decimal" />
+                        <span asp-validation-for="Taxa" class="text-danger small"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i data-lucide="arrow-left" class="me-1"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="check-circle" class="me-1"></i> Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            lucide.createIcons();
+
+            const hoje = new Date().toISOString().split('T')[0];
+            const $dataVencimento = $('#DataVencimento');
+            const $dataGroup = $('#DataVencimentoGroup');
+
+            // Inicializa com a data de hoje
+            $dataVencimento.val(hoje);
+
+            $('#ToggleLiquidez').on('change', function () {
+                if (this.checked) {
+                    $dataGroup.hide();
+                    $dataVencimento.val('');
+                } else {
+                    $dataGroup.show();
+                    $dataVencimento.val(hoje);
+                }
+            });
+
+            // ➤ Máscara de % no campo Taxa
+            $('#Taxa').on('input', function () {
+                let raw = $(this).val().replace(/[^\d]/g, '');
+
+                if (raw.length < 3) raw = raw.padStart(3, '0');
+
+                let valor = parseFloat(raw) / 100;
+                let formatado = `% ${valor.toFixed(2).replace('.', ',')}`;
+
+                $(this).val(formatado);
+            });
+
+            // ➤ Formata valor para envio sem o símbolo
+            $('form').on('submit', function () {
+                let taxa = $('#Taxa').val().replace('%', '').replace(/\s/g, '').replace(',', '.');
+                $('#Taxa').val(taxa);
+            });
+        });
+        
+        $(document).ready(function () {
+            // Máscara de preço
+            $('.preco-input').on('input', function () {
+                let raw = $(this).val().replace(/[^\d]/g, '');
+                if (raw.length < 3) raw = raw.padStart(3, '0');
+                let valorNumerico = parseFloat(raw) / 100;
+                let valorFormatado = 'R$ ' + new Intl.NumberFormat('pt-BR', {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                }).format(valorNumerico);
+                $(this).val(valorFormatado);
+            });
+
+            // Envio sem máscara
+            $('form').on('submit', function () {
+                $('.preco-input').each(function () {
+                    let valor = $(this).val().replace('R$', '').replace(/\s/g, '').trim();
+                    $(this).val(valor);
+                });
+            });
+
+            // Data atual no campo de data
+            const hoje = new Date().toISOString().split('T')[0];
+            $('#DataCompra').val(hoje);
+            $('#DataVencimento').val(hoje);
+
+            // Quando mudar o tipo de fixação
+            $('#Forma').on('change', function () {
+                const forma = $(this).val();
+                const $label = $('#TaxaLabel');
+
+                if (forma === 'pos') {
+                    $label.html('<i data-lucide="percent" class="me-1"></i> Taxa <small class="text-muted">(Indexador: CDI)</small>');
+                } else {
+                    $label.html('<i data-lucide="percent" class="me-1"></i> Taxa');
+                }
+
+                lucide.createIcons();
+            });
+
+            lucide.createIcons();
+        });
+    
+    </script>
+}
+
+<style>
+    .toggle-black:checked {
+        background-color: #000 !important;
+        border-color: #000 !important;
+    }
+
+    .toggle-black:focus {
+        box-shadow: 0 0 0 0.2rem rgba(0, 0, 0, 0.25) !important;
+    }
+
+    .toggle-black:checked::before {
+        background-color: #fff;
+    }
+</style>

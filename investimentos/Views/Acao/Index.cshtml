@@ -1,0 +1,223 @@
+@model IEnumerable<PlataformaInvestimentos.Models.Acao>
+
+@{
+    ViewData["Title"] = "Minhas Ações";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">
+            <i data-lucide="line-chart" class="me-2" style="width: 1em; height: 1em;"></i> Minhas Ações
+        </h3>
+        <a asp-action="Create" class="btn btn-primary d-flex align-items-center">
+            <i data-lucide="plus-circle" class="me-1"></i> Adicionar Ação
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+            <tr>
+                <th>
+                    <div class="d-inline-flex align-items-center gap-1">
+                        <i data-lucide="image"></i>
+                        <span>Ativo</span>
+                    </div>
+                </th>
+
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewBag.NomeSort" class="text-decoration-none text-dark d-inline-flex align-items-center gap-1">
+                        <i data-lucide="type"></i>
+                        <span>Nome</span>
+                        @if (ViewBag.NomeSort == "Nome") { <i data-lucide="chevron-down"></i> }
+                        else if (ViewBag.NomeSort == "nome_desc") { <i data-lucide="chevron-up"></i> }
+                    </a>
+                </th>
+
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewBag.PrecoSort" class="text-decoration-none text-dark d-inline-flex align-items-center gap-1">
+                        <i data-lucide="dollar-sign"></i>
+                        <span>Valor total</span>
+                        @if (ViewBag.PrecoSort == "Preco") { <i data-lucide="chevron-down"></i> }
+                        else if (ViewBag.PrecoSort == "preco_desc") { <i data-lucide="chevron-up"></i> }
+                    </a>
+                </th>
+
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewBag.QuantidadeSort" class="text-decoration-none text-dark d-inline-flex align-items-center gap-1">
+                        <i data-lucide="hash"></i>
+                        <span>Quantidade</span>
+                        @if (ViewBag.QuantidadeSort == "Quantidade") { <i data-lucide="chevron-down"></i> }
+                        else if (ViewBag.QuantidadeSort == "quantidade_desc") { <i data-lucide="chevron-up"></i> }
+                    </a>
+                </th>
+
+                <th>
+                    <div class="d-inline-flex align-items-center gap-1">
+                        <i data-lucide="trash-2"></i>
+                        <span>Ações</span>
+                    </div>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <img src="@item.Logo" alt="Logo" width="32" height="32" class="rounded-circle" />
+                            <span class="fw-semibold">@item.Ticker</span>
+                        </div>
+                    </td>
+                    <td>@item.Nome</td>
+                    <td>@item.PrecoAtual.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))</td>
+                    <td>@item.Quantidade</td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalExcluir@(item.Id)">
+                            <i data-lucide="trash-2" class="me-1" style="width:16px; height:16px;"></i> Excluir
+                        </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="modalExcluir@(item.Id)" tabindex="-1" aria-labelledby="modalLabel@(item.Id)" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content rounded-3 shadow-sm">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title" id="modalLabel@(item.Id)">
+                                            <i data-lucide="trash-2" class="me-2"></i> Confirmar Venda
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Fechar"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="alert alert-warning small d-flex align-items-start">
+                                            <i data-lucide="alert-triangle" class="me-2 mt-1"></i>
+                                            <div>Você está prestes a <strong>vender parte ou toda</strong> esta ação. Informe os dados da venda.</div>
+                                        </div>
+                                        <form id="formDelete@(item.Id)" asp-action="Delete" asp-route-id="@item.Id" method="post">
+                                            @Html.AntiForgeryToken()
+                                            <input type="hidden" name="Ticker" value="@item.Ticker" />
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Quantidade</label>
+                                                <input type="number" class="form-control" name="quantidade" value="@item.Quantidade" min="1" max="@item.Quantidade" required />
+                                            </div>
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Preço de Venda (Por unidade)</label>
+                                                <input type="text" class="form-control preco-input" name="preco" inputmode="decimal" data-ticker="@item.Ticker" required />
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i data-lucide="trash" class="me-1"></i> Confirmar Venda
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Função para formatar um número como moeda brasileira (BRL)
+        function formatarMoeda(valor) {
+            const numero = parseFloat(valor);
+            if (isNaN(numero)) {
+                return "R$ 0,00"; // Retorna um valor padrão se a entrada for inválida
+            }
+            // Usa toLocaleString para a formatação correta com R$ e separador de milhar
+            return numero.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
+
+        $(document).ready(function () {
+            // --- CORREÇÃO PRINCIPAL ---
+            // Formata os campos de preço assim que a página é carregada
+            $('.preco-input').each(function () {
+                const valorAtual = $(this).val();
+                if (!valorAtual) return; // Evita erro se o campo estiver vazio
+                // O valor vem do C# com vírgula ou ponto dependendo da cultura do servidor
+                const valorNumerico = parseFloat(valorAtual.replace(',', '.'));
+                $(this).val(formatarMoeda(valorNumerico));
+            });
+            
+            // Lógica para formatação ao digitar (caso o campo seja editável)
+            $('.preco-input').on('input', function () {
+                let valor = $(this).val().replace(/\D/g, ''); // Remove tudo que não for dígito
+                if (valor === '') {
+                    $(this).val('');
+                    return;
+                }
+                let numero = parseFloat(valor) / 100;
+                $(this).val(formatarMoeda(numero));
+            });
+
+            // --- CORREÇÃO APLICADA AQUI ---
+            // Prepara o valor para envio ao servidor no formato correto (com vírgula)
+            $('form').on('submit', function () {
+                $(this).find('.preco-input').each(function () {
+                    let valorFormatado = $(this).val();
+                    if (!valorFormatado) return;
+
+                    // Converte 'R$ 1.234,56' para '1234,56'
+                    let valorParaEnvio = valorFormatado
+                        .replace('R$', '')      // Remove "R$"
+                        .replace(/\s/g, '')     // Remove espaços
+                        .replace(/\./g, '');    // Remove o ponto de milhar
+                    
+                    // A linha .replace(',', '.') FOI REMOVIDA.
+
+                    $(this).val(valorParaEnvio);
+                });
+            });
+
+            // Mantém seu código de notificações e ícones intacto
+            lucide.createIcons();
+            
+            const sucesso = '@TempData["Sucesso"]';
+            const removido = '@TempData["Removido"]';
+            const duration = 3000;
+
+            if (sucesso === 'True') {
+                const toast = Toastify({
+                    text: "Ação adicionada com sucesso!",
+                    duration: duration,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#198754",
+                    close: true,
+                    stopOnFocus: true
+                });
+                toast.showToast();
+                // ... (seu código da barra de progresso)
+            }
+
+            if (removido === 'True') {
+                const toast = Toastify({
+                    text: "Ação removida com sucesso!",
+                    duration: duration,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#dc3545",
+                    close: true,
+                    stopOnFocus: true
+                });
+                toast.showToast();
+                // ... (seu código da barra de progresso)
+            }
+        });
+    </script>
+}

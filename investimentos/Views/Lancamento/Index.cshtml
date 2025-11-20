@@ -1,0 +1,107 @@
+@model X.PagedList.IPagedList<PlataformaInvestimentos.Models.Lancamento>
+@using System.Globalization
+@using Microsoft.AspNetCore.Mvc.TagHelpers
+@using X.PagedList.Mvc.Core
+@using X.PagedList.Mvc.Core.Common
+
+@{
+    ViewData["Title"] = "Meus Lançamentos";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">
+            <i data-lucide="clipboard-list" class="me-2" style="width: 1em; height: 1em;"></i> Lançamentos
+        </h3>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+            <tr>
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewBag.MovSort"
+                       class="text-decoration-none text-dark d-inline-flex align-items-center gap-1">
+                        <i data-lucide="move-vertical"></i>
+                        <span>Movimentação</span>
+                        @if (ViewBag.MovSort == "Movimentacao") { <i data-lucide="chevron-down"></i> }
+                        else if (ViewBag.MovSort == "mov_desc") { <i data-lucide="chevron-up"></i> }
+                    </a>
+                </th>
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewBag.ProdSort"
+                       class="text-decoration-none text-dark d-inline-flex align-items-center gap-1">
+                        <i data-lucide="box"></i>
+                        <span>Produto</span>
+                        @if (ViewBag.ProdSort == "Produto") { <i data-lucide="chevron-down"></i> }
+                        else if (ViewBag.ProdSort == "produto_desc") { <i data-lucide="chevron-up"></i> }
+                    </a>
+                </th>
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewBag.QtdSort"
+                       class="text-decoration-none text-dark d-inline-flex align-items-center gap-1">
+                        <i data-lucide="hash"></i>
+                        <span>Quantidade</span>
+                        @if (ViewBag.QtdSort == "Quantidade") { <i data-lucide="chevron-down"></i> }
+                        else if (ViewBag.QtdSort == "quantidade_desc") { <i data-lucide="chevron-up"></i> }
+                    </a>
+                </th>
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewBag.TotalSort"
+                       class="text-decoration-none text-dark d-inline-flex align-items-center gap-1">
+                        <i data-lucide="calculator"></i>
+                        <span>Valor Total</span>
+                        @if (ViewBag.TotalSort == "ValorTotal") { <i data-lucide="chevron-down"></i> }
+                        else if (ViewBag.TotalSort == "valortotal_desc") { <i data-lucide="chevron-up"></i> }
+                    </a>
+                </th>
+                <th>
+                    <a asp-action="Index" asp-route-sortOrder="@ViewBag.DataSort"
+                       class="text-decoration-none text-dark d-inline-flex align-items-center gap-1">
+                        <i data-lucide="calendar"></i>
+                        <span>Data</span>
+                        @if (ViewBag.DataSort == "Data") { <i data-lucide="chevron-down"></i> }
+                        else if (ViewBag.DataSort == "data_desc") { <i data-lucide="chevron-up"></i> }
+                    </a>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>
+                        @if (item.Movimentacao.Equals("Compra", StringComparison.OrdinalIgnoreCase))
+                        {
+                            <span class="badge bg-success rounded-pill px-3 py-1 text-white">
+                                @item.Movimentacao.ToUpper()
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-danger rounded-pill px-3 py-1 text-white">
+                                @item.Movimentacao.ToUpper()
+                            </span>
+                        }
+                    </td>
+                    <td>@item.Produto</td>
+                    <td>@item.Quantidade.ToString("F0", CultureInfo.GetCultureInfo("pt-BR"))</td>
+                    <td>@item.ValorTotal.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))</td>
+                    <td>@item.Data.ToShortDateString()</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="d-flex justify-content-center">
+        @Html.PagedListPager(Model, page => Url.Action("Index", new { page, sortOrder = ViewBag.CurrentSort }),
+            new PagedListRenderOptions { UlElementClasses = new[] { "pagination" }, LiElementClasses = new[] { "page-item" }, PageClasses = new[] { "page-link" } })
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        lucide.createIcons();
+    </script>
+}

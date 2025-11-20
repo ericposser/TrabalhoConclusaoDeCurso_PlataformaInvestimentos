@@ -1,0 +1,182 @@
+@model PlataformaInvestimentos.Models.Acao
+
+@{
+    ViewData["Title"] = "Adicionar Ação";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h3 class="mb-4 text-center">
+                    <i data-lucide="line-chart" class="me-2 align-middle" style="width: 28px; height: 28px;"></i>
+                    Adicionar Ação
+                </h3>
+
+                <form asp-action="Create">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
+
+                    <div class="mb-3">
+                        <label for="ticker-select" class="form-label fw-semibold">
+                            <i data-lucide="search" class="me-1"></i> Ação
+                        </label>
+                        <select id="ticker-select" class="form-select"></select>
+                        <input type="hidden" id="Ticker" name="Ticker"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Nome" class="form-label fw-semibold">
+                            <i data-lucide="type" class="me-1"></i> Nome
+                        </label>
+                        <input asp-for="Nome" class="form-control" id="Nome" readonly/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PrecoAtual" class="form-label fw-semibold">
+                            <i data-lucide="dollar-sign" class="me-1"></i> Preço
+                        </label>
+                        <input asp-for="PrecoAtual" class="form-control preco-input" id="PrecoAtual" step="0.01"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Quantidade" class="form-label fw-semibold">
+                            <i data-lucide="hash" class="me-1"></i> Quantidade
+                        </label>
+                        <input asp-for="Quantidade" class="form-control"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DataCompra" class="form-label fw-semibold">
+                            <i data-lucide="calendar" class="me-1"></i> Data da Compra
+                        </label>
+                        <input asp-for="DataCompra" class="form-control" type="date" id="DataCompra"/>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i data-lucide="arrow-left" class="me-1"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="check-circle" class="me-1"></i> Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Função para aplicar a máscara de dinheiro
+            function aplicarMascaraDinheiro(seletor) {
+                $(seletor).on('input', function (e) {
+                    let valor = $(this).val();
+
+                    // 1. Remove tudo que não for dígito
+                    valor = valor.replace(/\D/g, '');
+
+                    if (valor === '') {
+                        return;
+                    }
+
+                    // 2. Transforma o valor em centavos
+                    valor = (parseFloat(valor) / 100).toFixed(2) + '';
+
+                    // 3. Adiciona o ponto de milhar e a vírgula decimal
+                    valor = valor.replace('.', ','); // troca ponto por vírgula
+                    valor = valor.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.');
+
+                    // 4. Adiciona o "R$" no início
+                    $(this).val('R$ ' + valor);
+                });
+            }
+
+            // Aplica a máscara aos inputs
+            aplicarMascaraDinheiro('.preco-input');
+
+
+            // --- ENVIO PARA O SERVIDOR ---
+            // AJUSTE CRÍTICO ESTÁ AQUI!
+            $('form').on('submit', function () {
+                $('.preco-input').each(function () {
+                    let valorMascarado = $(this).val();
+                    if (!valorMascarado) return;
+
+                    // Converte de "R$ 1.234,56" para "1234,56"
+                    let valorParaEnvio = valorMascarado
+                        .replace('R$', '')      // Resultado: " 1.234,56"
+                        .trim()                 // Resultado: "1.234,56"
+                        .replace(/\./g, '');    // Resultado: "1234,56" (remove o ponto de milhar)
+                                                // A vírgula é MANTIDA.
+
+                    $(this).val(valorParaEnvio);
+                });
+            });
+
+            // Definir data atual no campo de data
+            const hoje = new Date().toISOString().split('T')[0];
+            $('#DataCompra').val(hoje);
+
+            // Buscar ações e aplicar no select2
+            $.get('/Acao/ListarTodasAcoes', function (acoes) {
+                const formatResult = (acao) => {
+                    if (!acao.id) return acao.text;
+                    const logo = acao.logo || '/img/sem-logo.png';
+                    return $(
+                        `<div class="d-flex align-items-center">
+                            <img src="${logo}" class="me-2 rounded-circle" width="24" height="24" />
+                            <span>${acao.text}</span>
+                        </div>`
+                    );
+                };
+
+                const $select = $('#ticker-select');
+
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+
+                $select.empty();
+                $select.select2({
+                    data: acoes,
+                    placeholder: 'Selecione uma ação',
+                    allowClear: true,
+                    width: '100%',
+                    templateResult: formatResult,
+                    templateSelection: formatResult,
+                    escapeMarkup: m => m
+                });
+                $select.val(null).trigger('change');
+            });
+
+            // Ao selecionar uma ação, preencher nome e valor
+            $('#ticker-select').on('change', function () {
+                const ticker = $(this).val();
+                if (!ticker) return;
+
+                $('#Ticker').val(ticker);
+
+                $.get(`/Acao/BuscarAtivo?acao=${ticker}`, function (data) {
+                    $('#Nome').val(data.nome);
+
+                    // Formata o preço que vem da API usando a mesma lógica da máscara
+                    const precoFormatado = data.precoAtual.toLocaleString('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    });
+                    $('#PrecoAtual').val(precoFormatado);
+
+                    // Re-aplica a máscara, pois o campo pode ter sido recriado/alterado
+                    aplicarMascara('#PrecoAtual');
+
+                    $('#DataCompra').val(new Date().toISOString().split('T')[0]);
+                });
+            });
+
+            lucide.createIcons();
+        });
+    </script>
+}

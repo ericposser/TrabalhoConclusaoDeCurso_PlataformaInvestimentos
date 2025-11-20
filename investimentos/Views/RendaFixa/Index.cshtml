@@ -1,0 +1,197 @@
+@model IEnumerable<PlataformaInvestimentos.Models.RendaFixa>
+@using System.Globalization
+
+@{
+    ViewData["Title"] = "Renda Fixa";
+}
+
+<div class="container py-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="fw-bold">
+            <i data-lucide="banknote" class="me-2" style="width: 1em; height: 1em;"></i> Minhas Rendas Fixas
+        </h3>
+        <a asp-action="Create" class="btn btn-primary d-flex align-items-center">
+            <i data-lucide="plus-circle" class="me-1"></i> Adicionar Renda Fixa
+        </a>
+    </div>
+
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead class="table-light">
+            <tr>
+                <th><i data-lucide="type"></i> Emissor</th>
+                <th><i data-lucide="dollar-sign"></i> Valor Total</th>
+                <th><i data-lucide="calendar"></i> Data da Compra</th>
+                <th><i data-lucide="calendar"></i> Data de Vencimento</th>
+                <th><i data-lucide="trash-2"></i> Ações</th>
+            </tr>
+            </thead>
+            <tbody>
+            @foreach (var item in Model)
+            {
+                <tr>
+                    <td>@item.Emissor</td>
+                    <td>@item.Valor.ToString("C", CultureInfo.GetCultureInfo("pt-BR"))</td>
+                    <td>@item.DataCompra.ToShortDateString()</td>
+                    <td>
+                        @(item.DataVencimento.HasValue
+                            ? item.DataVencimento.Value.ToString("dd/MM/yyyy")
+                            : "-")
+                    </td>
+                    <td>
+                        <button type="button" class="btn btn-outline-danger btn-sm"
+                                data-bs-toggle="modal"
+                                data-bs-target="#modalExcluir@(item.Id)">
+                            <i data-lucide="trash-2" class="me-1" style="width:16px; height:16px;"></i> Excluir
+                        </button>
+
+                        <!-- Modal -->
+                        <div class="modal fade" id="modalExcluir@(item.Id)" tabindex="-1"
+                             aria-labelledby="modalLabel@(item.Id)" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content rounded-3 shadow-sm">
+                                    <div class="modal-header bg-danger text-white">
+                                        <h5 class="modal-title" id="modalLabel@(item.Id)">
+                                            <i data-lucide="trash-2" class="me-2"></i> Confirmar Venda
+                                        </h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                                                aria-label="Fechar"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="alert alert-warning small d-flex align-items-start">
+                                            <i data-lucide="alert-triangle" class="me-2 mt-1"></i>
+                                            <div>Você está prestes a <strong>vender parte ou todo</strong> este título
+                                                de renda fixa. Informe o valor a vender.
+                                            </div>
+                                        </div>
+
+                                        <form asp-action="Delete" asp-route-id="@item.Id" method="post"
+                                              id="formDelete@(item.Id)">
+                                            @Html.AntiForgeryToken()
+
+                                            <div class="mb-3">
+                                                <label class="form-label">Valor a vender (R$)</label>
+                                                <input type="text"
+                                                       class="form-control preco-input"
+                                                       name="valor"
+                                                       data-disponivel="@item.Valor.ToString("F2", System.Globalization.CultureInfo.InvariantCulture)"
+                                                       value="@item.Valor.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))"
+                                                       required/>
+                                            </div>
+
+                                            <div class="modal-footer">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                                    Cancelar
+                                                </button>
+                                                <button type="submit" class="btn btn-danger">
+                                                    <i data-lucide="trash" class="me-1"></i> Confirmar Venda
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        lucide.createIcons();
+
+        $(document).ready(function () {
+            // Máscara R$ com milhares
+            $(document).on('input', '.preco-input', function () {
+                let raw = $(this).val().replace(/[^\d]/g, '');
+                if (raw.length < 3) raw = raw.padStart(3, '0');
+
+                let valorNumerico = parseFloat(raw) / 100;
+                let valorFormatado = new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL',
+                    minimumFractionDigits: 2
+                }).format(valorNumerico);
+
+                $(this).val(valorFormatado);
+            });
+
+            // Validação e normalização no submit (não permitir vender mais que o disponível)
+            $(document).on('submit', 'form[id^="formDelete"]', function (e) {
+                const $form = $(this);
+                const $precoInput = $form.find('.preco-input');
+
+                let valorStr = $precoInput.val().replace(/[R$\s.]/g, '').replace(',', '.').trim();
+                let valorDigitado = parseFloat(valorStr);
+
+                // disponível (em InvariantCulture)
+                let disponivel = parseFloat($precoInput.data('disponivel'));
+
+                if (isNaN(valorDigitado) || valorDigitado <= 0) {
+                    alert('Informe um valor válido maior que zero.');
+                    e.preventDefault();
+                    return false;
+                }
+
+                if (valorDigitado > disponivel) {
+                    alert('Você não pode vender mais do que possui.');
+                    e.preventDefault();
+                    return false;
+                }
+
+                // Atualiza o input com o número normalizado para o backend
+                $precoInput.val(valorDigitado.toString().replace('.', ',') === valorStr ? valorStr : valorDigitado);
+                // (Se seu backend espera ponto como decimal, troque para: $precoInput.val(valorDigitado.toString(CultureInfo.InvariantCulture));)
+            });
+        });
+
+        document.addEventListener("DOMContentLoaded", function () {
+            const sucesso = '@TempData["Sucesso"]';
+            const removido = '@TempData["Removido"]';
+
+            const duration = 3000;
+
+            if (sucesso === 'True') {
+                const toast = Toastify({
+                    text: "Renda Fixa adicionada com sucesso!",
+                    duration: duration,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#198754",
+                    close: true,
+                    stopOnFocus: true
+                });
+                toast.showToast();
+
+                const toastElem = document.querySelector(".toastify.on");
+                const progress = document.createElement("div");
+                progress.classList.add("progress-bar");
+                progress.style.animationDuration = duration + "ms";
+                toastElem.appendChild(progress);
+            }
+
+            if (removido === 'True') {
+                const toast = Toastify({
+                    text: "Renda Fixa removida com sucesso!",
+                    duration: duration,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#dc3545",
+                    close: true,
+                    stopOnFocus: true
+                });
+                toast.showToast();
+
+                const toastElem = document.querySelectorAll(".toastify.on")[1] || document.querySelector(".toastify.on");
+                const progress = document.createElement("div");
+                progress.classList.add("progress-bar");
+                progress.style.animationDuration = duration + "ms";
+                toastElem.appendChild(progress);
+            }
+        });
+    </script>
+}

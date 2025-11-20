@@ -1,0 +1,41 @@
+@{
+    ViewData["Title"] = "Trocar Senha";
+}
+
+<div class="container-fluid d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
+        <div class="text-center mb-4 d-flex justify-content-center align-items-center gap-2">
+            <i data-lucide="key-round" style="width: 1.5rem; height: 1.5rem;"></i>
+            <h4 class="m-0">Alterar Senha</h4>
+        </div>
+        <p class="text-muted text-center small mb-4">Atualize sua senha de acesso</p>
+
+        <form asp-action="TrocarSenha" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+
+            <div class="mb-3">
+                <label class="form-label">Nova Senha</label>
+                <input type="password" name="novaSenha" class="form-control" placeholder="••••••••" required />
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Confirmar Nova Senha</label>
+                <input type="password" name="confirmarSenha" class="form-control" placeholder="••••••••" required />
+            </div>
+
+            <div class="d-grid mb-2">
+                <button type="submit" class="btn btn-primary">
+                    <i data-lucide="save" class="me-1" style="width: 1rem; height: 1rem;"></i> Salvar
+                </button>
+            </div>
+        </form>
+
+        <div class="text-center mt-3">
+            <small><a href="/Home/Index" class="text-decoration-none">Voltar</a></small>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>lucide.createIcons();</script>
+}

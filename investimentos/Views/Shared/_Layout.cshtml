@@ -1,0 +1,158 @@
+﻿@using System.Security.Claims
+@{
+    var isAuthenticated = User.Identity.IsAuthenticated;
+    var nomeUsuario = User.Identity?.Name ?? "Usuário";
+}
+
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - investimentos</title>
+
+    <!-- Estilos -->
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/investimentos.styles.css" asp-append-version="true" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <!-- Toastify CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css"/>
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+@if (isAuthenticated)
+{
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-header d-flex align-items-center mb-1">
+            <i data-lucide="user" class="me-2"></i>
+            <span class="fs-5 fw-semibold text-dark">@nomeUsuario</span>
+        </div>
+        <hr class="border-secondary" />
+        
+        <ul class="nav nav-pills flex-column mb-auto">
+            <li class="nav-item">
+                <a href="/Home/Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Home" ? "active" : "text-dark")">
+                    <i data-lucide="home" class="me-2"></i> <span class="fw-semibold">Início</span>
+                </a>
+            </li>
+
+            <li class="nav-item px-2 mt-3 mb-3">
+                <div class="text-uppercase fw-semibold ps-1" style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.35); letter-spacing: 0.05em;">
+                    Investimentos
+                </div>
+            </li>
+
+            <li>
+                <a href="/Acao/Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Acao" ? "active" : "text-dark")">
+                    <i data-lucide="line-chart" class="me-2"></i> <span class="fw-semibold">Ações</span>
+                </a>
+            </li>
+            <li>
+                <a href="/FundoImobiliario/Index" class="nav-link text-nowrap @(ViewContext.RouteData.Values["Controller"]?.ToString() == "FundoImobiliario" ? "active" : "text-dark")">
+                    <i data-lucide="building" class="me-2"></i>
+                    <span class="fw-semibold">Fundos Imobiliários</span>
+                </a>
+            </li>
+            <li>
+                <a href="/Criptomoeda/Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Criptomoeda" ? "active" : "text-dark")">
+                    <i data-lucide="circle-dollar-sign" class="me-2"></i> <span class="fw-semibold">Criptomoedas</span>
+                </a>
+            </li>
+
+            <li>
+                <a href="/RendaFixa/Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "RendaFixa" ? "active" : "text-dark")">
+                    <i data-lucide="banknote" class="me-2"></i> <span class="fw-semibold">Renda Fixa</span>
+                </a>
+            </li>
+
+            <li class="nav-item px-2 mt-3 mb-3">
+                <div class="text-uppercase fw-semibold ps-1" style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.35); letter-spacing: 0.05em;">
+                    Relatórios
+                </div>
+            </li>
+
+            <li>
+                <a href="/Lancamento/Index" class="nav-link @(ViewContext.RouteData.Values["Controller"]?.ToString() == "Lancamento" ? "active" : "text-dark")">
+                    <i data-lucide="newspaper" class="me-2"></i> <span class="fw-semibold">Extrato</span>
+                </a>
+            </li>
+
+            <li class="nav-item px-2 mt-3 mb-3">
+                <div class="text-uppercase fw-semibold ps-1" style="font-size: 0.75rem; color: rgba(0, 0, 0, 0.35); letter-spacing: 0.05em;">
+                    Configurações
+                </div>
+            </li>
+
+            <li class="nav-item dropdown">
+                <a
+                    class="nav-link text-dark d-flex align-items-center gap-2"
+                    id="userDropdown"
+                    role="button"
+                    data-bs-toggle="dropdown"
+                    aria-expanded="false"
+                >
+                    <i data-lucide="settings"></i>
+                    <span class="fw-semibold">Usuário</span>
+                    <!-- só esse ícone, sem círculo -->
+                    <i data-lucide="chevron-down" class="chevron-icon"></i>
+                </a>
+                <ul
+                    class="dropdown-menu dropdown-menu-end shadow-sm border-0"
+                    aria-labelledby="userDropdown"
+                >
+                    <li>
+                        <a class="dropdown-item" href="/Usuario/TrocarNome">
+                            <i data-lucide="edit-2" class="fw-semibold me-2 text-black"></i>
+                            <span class="fw-semibold text-black">Trocar nome</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="/Usuario/TrocarSenha">
+                            <i data-lucide="key-round" class="fw-semibold me-2 text-black"></i>
+                            <span class="fw-semibold text-black">Trocar senha</span>
+                        </a>
+                    </li>
+                </ul>
+            </li>
+
+        </ul>
+
+        <div class="mt-auto pt-3 border-secondary">
+            <hr class="border-secondary" />
+            <form asp-controller="Usuario" asp-action="Logout" method="post">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="nav-link text-dark d-flex align-items-center w-100 justify-content-start">
+                    <i data-lucide="log-out" class="me-2"></i> <span class="fw-semibold">Sair</span>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- CONTEÚDO PRINCIPAL COM SIDEBAR -->
+    <div class="main-content">
+        @RenderBody()
+    </div>
+}
+else
+{
+    <!-- LAYOUT PÚBLICO (LOGIN, CADASTRO ETC) -->
+    <div class="container py-5">
+        @RenderBody()
+    </div>
+}
+<!-- Scripts -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+<!-- Toastify JS -->
+<script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+<script>lucide.createIcons();</script>
+@await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

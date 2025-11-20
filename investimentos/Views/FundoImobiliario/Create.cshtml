@@ -1,0 +1,167 @@
+@model PlataformaInvestimentos.Models.FundoImobiliario
+
+@{
+    ViewData["Title"] = "Adicionar Fundo Imobiliário";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h3 class="mb-4 text-center">
+                    <i data-lucide="building" class="me-2 align-middle" style="width: 28px; height: 28px;"></i> Adicionar Fundo Imobiliário
+                </h3>
+
+                <form asp-action="Create">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
+
+                    <div class="mb-3">
+                        <label for="fundo-select" class="form-label fw-semibold">
+                            <i data-lucide="search" class="me-1"></i> Fundo Imobiliário
+                        </label>
+                        <select id="fundo-select" class="form-select"></select>
+                        <input type="hidden" id="Ticker" name="Ticker" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Nome" class="form-label fw-semibold">
+                            <i data-lucide="type" class="me-1"></i> Nome
+                        </label>
+                        <input asp-for="Nome" class="form-control" id="Nome" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PrecoAtual" class="form-label fw-semibold">
+                            <i data-lucide="dollar-sign" class="me-1"></i> Preço
+                        </label>
+                        <input asp-for="PrecoAtual" class="form-control preco-input" id="PrecoAtual" step="0.01"/>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Quantidade" class="form-label fw-semibold">
+                            <i data-lucide="hash" class="me-1"></i> Quantidade
+                        </label>
+                        <input asp-for="Quantidade" class="form-control" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DataCompra" class="form-label fw-semibold">
+                            <i data-lucide="calendar" class="me-1"></i> Data da Compra
+                        </label>
+                        <input asp-for="DataCompra" class="form-control" type="date" id="DataCompra" />
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i data-lucide="arrow-left" class="me-1"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="check-circle" class="me-1"></i> Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ✅ Função centralizada para formatar valores como moeda brasileira
+        function formatarMoeda(valor) {
+            const numero = parseFloat(valor);
+            if (isNaN(numero)) {
+                return "R$ 0,00";
+            }
+            return numero.toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL'
+            });
+        }
+
+        $(document).ready(function () {
+            // Máscara ao digitar usando a função correta
+            $('.preco-input').on('input', function () {
+                let valorNumerico = $(this).val().replace(/\D/g, ''); // Remove tudo que não for dígito
+                if (valorNumerico === '') {
+                    $(this).val(''); // Limpa o campo se não houver números
+                    return;
+                }
+                
+                let numero = parseFloat(valorNumerico) / 100;
+                $(this).val(formatarMoeda(numero));
+            });
+
+            // --- CORREÇÃO APLICADA AQUI ---
+            // Limpa a máscara e formata o número corretamente para o envio
+            $('form').on('submit', function () {
+                $('.preco-input').each(function () {
+                    let valorFormatado = $(this).val();
+                    if (!valorFormatado) return;
+
+                    // Converte 'R$ 1.234,56' para '1234,56'
+                    let valorParaEnvio = valorFormatado
+                        .replace('R$', '')      // Remove o "R$"
+                        .replace(/\s/g, '')     // Remove espaços (ex: ' 1.234,56' -> '1.234,56')
+                        .replace(/\./g, '');    // Remove o ponto de milhar (ex: '1.234,56' -> '1234,56')
+                                                // A vírgula é mantida!
+                    
+                    $(this).val(valorParaEnvio);
+                });
+            });
+
+            // Preencher data atual
+            const hoje = new Date().toISOString().split('T')[0];
+            $('#DataCompra').val(hoje);
+
+            // Popular lista de fundos (código original mantido)
+            $.get('/FundoImobiliario/ListarTodosFundos', function (fundos) {
+                const formatResult = (fundo) => {
+                    if (!fundo.id) return fundo.text;
+                    const logo = fundo.logo || '/img/sem-logo.png';
+                    return $(
+                        `<div class="d-flex align-items-center">
+                            <img src="${logo}" class="me-2 rounded-circle" width="24" height="24" />
+                            <span>${fundo.text}</span>
+                        </div>`
+                    );
+                };
+
+                const $select = $('#fundo-select');
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+                $select.select2({
+                    data: fundos,
+                    placeholder: 'Selecione um fundo',
+                    allowClear: true,
+                    width: '100%',
+                    templateResult: formatResult,
+                    templateSelection: formatResult,
+                    escapeMarkup: m => m
+                });
+                $select.val(null).trigger('change');
+            });
+
+            // Buscar dados do fundo selecionado
+            $('#fundo-select').on('change', function () {
+                const ticker = $(this).val();
+                if (!ticker) return;
+
+                $('#Ticker').val(ticker);
+
+                $.get(`/FundoImobiliario/BuscarAtivo?fundo=${ticker}`, function (data) {
+                    $('#Nome').val(data.nome);
+
+                    // Formatação correta do preço vindo da API
+                    $('#PrecoAtual').val(formatarMoeda(data.precoAtual));
+
+                    $('#DataCompra').val(new Date().toISOString().split('T')[0]);
+                });
+            });
+
+            lucide.createIcons();
+        });
+    </script>
+}

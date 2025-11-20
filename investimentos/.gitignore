@@ -1,0 +1,55 @@
+# Build results
+bin/
+obj/
+out/
+
+.idea/
+*.sln.iml
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Logs
+*.log
+
+.DS_Store
+Thumbs.db
+
+# ASP.NET / Configs (remove ALL appsettings files)
+appsettings*.json
+
+# NuGet
+*.nupkg
+packages/
+.nuget/
+
+# Publish
+publish/
+*.Publish.xml
+
+# Cache
+.vs/
+.vscode/
+*.cache/
+*.db
+
+# If using node in wwwroot
+node_modules/
+npm-debug.log
+yarn-error.log
+
+# Secrets
+secrets.json
+
+# Certificate files
+*.pfx
+*.p12
+*.key
+*.crt
+
+# Temp
+tmp/
+temp/

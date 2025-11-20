@@ -1,0 +1,20 @@
+.error-wrapper {
+    height: 100vh;
+    padding: 40px 20px;
+    background-color: #f4f6fb;
+    font-family: 'Segoe UI', sans-serif;
+}
+
+.error-wrapper h1 {
+    font-size: 8rem;
+    line-height: 1;
+}
+
+.error-wrapper h2 {
+    font-size: 1.75rem;
+    font-weight: 600;
+}
+
+.error-wrapper p {
+    font-size: 1rem;
+}

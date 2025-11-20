@@ -1,0 +1,176 @@
+@model PlataformaInvestimentos.Models.Criptomoeda
+
+@{
+    ViewData["Title"] = "Adicionar Criptomoeda";
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card shadow-sm border-0 rounded-4 p-4">
+                <h3 class="mb-4 text-center">
+                    <i data-lucide="circle-dollar-sign" class="me-2 align-middle" style="width: 28px; height: 28px;"></i> Adicionar Criptomoeda
+                </h3>
+
+                <form asp-action="Create">
+                    @Html.AntiForgeryToken()
+                    <div asp-validation-summary="ModelOnly" class="text-danger mb-3 small"></div>
+
+                    <div class="mb-3">
+                        <label for="ticker-select" class="form-label fw-semibold">
+                            <i data-lucide="search" class="me-1"></i> Criptomoeda
+                        </label>
+                        <select id="ticker-select" class="form-select" disabled>
+                            <option>Carregando...</option>
+                        </select>
+                        <input type="hidden" id="Ticker" name="Ticker" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Nome" class="form-label fw-semibold">
+                            <i data-lucide="type" class="me-1"></i> Nome
+                        </label>
+                        <input asp-for="Nome" class="form-control" id="Nome" readonly />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="PrecoAtual" class="form-label fw-semibold">
+                            <i data-lucide="dollar-sign" class="me-1"></i> Preço
+                        </label>
+                        <input asp-for="PrecoAtual" class="form-control preco-input" id="PrecoAtual" step="0.01" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Quantidade" class="form-label fw-semibold">
+                            <i data-lucide="hash" class="me-1"></i> Quantidade
+                        </label>
+                        <input asp-for="Quantidade" class="form-control" id="Quantidade" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="DataCompra" class="form-label fw-semibold">
+                            <i data-lucide="calendar" class="me-1"></i> Data da Compra
+                        </label>
+                        <input asp-for="DataCompra" class="form-control" type="date" id="DataCompra" />
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-4">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i data-lucide="arrow-left" class="me-1"></i> Voltar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i data-lucide="check-circle" class="me-1"></i> Salvar
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // --- 1. Seleciona todos os campos do formulário ---
+            const $select = $('#ticker-select');
+            const $precoInput = $('#PrecoAtual');
+            const $quantidadeInput = $('#Quantidade');
+            const $dataInput = $('#DataCompra');
+            const $submitButton = $('form button[type="submit"]'); // Seletor para o botão de salvar
+            const hoje = new Date().toISOString().split('T')[0];
+            let precoRealCripto = 0;
+
+            $dataInput.val(hoje);
+
+            // --- 2. Desabilita todos os campos antes de iniciar o carregamento ---
+            $select.prop('disabled', true).html('<option>Carregando criptos...</option>');
+            $precoInput.prop('disabled', true);
+            $quantidadeInput.prop('disabled', true);
+            $dataInput.prop('disabled', true);
+            $submitButton.prop('disabled', true);
+
+            // Carregando criptos via AJAX
+            $.get('/Criptomoeda/ListarTodasCriptos', function (criptos) {
+                const formatResult = (cripto) => {
+                    if (!cripto.id) return cripto.text;
+                    return `
+                        <div class="d-flex align-items-center">
+                            <span>${cripto.text}</span>
+                        </div>
+                    `;
+                };
+
+                if ($select.hasClass('select2-hidden-accessible')) {
+                    $select.select2('destroy');
+                }
+
+                $select.empty().select2({
+                    data: criptos,
+                    placeholder: 'Selecione uma criptomoeda',
+                    allowClear: true,
+                    width: '100%',
+                    templateResult: formatResult,
+                    templateSelection: formatResult,
+                    escapeMarkup: m => m
+                });
+
+                // --- 3. Habilita todos os campos após o carregamento ser concluído ---
+                $select.prop('disabled', false).val(null).trigger('change');
+                $precoInput.prop('disabled', false);
+                $quantidadeInput.prop('disabled', false);
+                $dataInput.prop('disabled', false);
+                $submitButton.prop('disabled', false);
+            });
+
+            // Restante do seu código (eventos de change, input, submit)
+            $select.on('change', function () {
+                const ticker = $(this).val();
+                if (!ticker) return;
+                $('#Ticker').val(ticker);
+                $.get(`/Criptomoeda/BuscarCripto?cripto=${ticker}`, function (data) {
+                    precoRealCripto = data.precoAtual;
+                    $('#Nome').val(data.nome);
+                    const precoFormatado = new Intl.NumberFormat('pt-BR', {
+                        style: 'currency',
+                        currency: 'BRL'
+                    }).format(precoRealCripto);
+                    $precoInput.val(precoFormatado);
+                    $quantidadeInput.val((1).toFixed(8).replace('.', ','));
+                    $dataInput.val(new Date().toISOString().split('T')[0]);
+                });
+            });
+
+            $precoInput.on('input', function () {
+                let valorLimpo = $(this).val().replace(/[^\d]/g, '');
+                if (valorLimpo.length < 3) valorLimpo = valorLimpo.padStart(3, '0');
+                let valorNumerico = parseFloat(valorLimpo) / 100;
+                let valorFormatado = new Intl.NumberFormat('pt-BR', {
+                    style: 'currency',
+                    currency: 'BRL'
+                }).format(valorNumerico);
+                $(this).val(valorFormatado);
+                if (precoRealCripto > 0) {
+                    const quantidade = valorNumerico / precoRealCripto;
+                    $quantidadeInput.val(quantidade.toFixed(8).replace('.', ','));
+                } else {
+                    $quantidadeInput.val('');
+                }
+            });
+
+            $('form').on('submit', function () {
+                let preco = $precoInput.val()
+                    .replace('R$', '')
+                    .replace(/\./g, '')
+                    .replace(',', '.')
+                    .trim();
+                $precoInput.val(preco);
+                let qtd = $quantidadeInput.val()
+                    .replace(',', '.')
+                    .trim();
+                $quantidadeInput.val(qtd);
+            });
+
+            lucide.createIcons();
+        });
+    </script>
+}

@@ -1,0 +1,31 @@
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background-color: #f8f9fa;
+}
+
+.login-wrapper,
+.create-wrapper {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background-color: #f8f9fa;
+    z-index: 10; /* Garante que fique acima de elementos como sidebar se tiver */
+}
+
+.card {
+    max-width: 400px;
+    width: 100%;
+    padding: 2rem;
+    border-radius: 16px;
+    border: none !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}

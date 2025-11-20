@@ -1,0 +1,83 @@
+@{
+    ViewData["Title"] = "Login";
+   
+}
+<link rel="stylesheet" href="~/css/loginecadastro.css" asp-append-version="true"/>
+
+<div class="container-fluid login-wrapper d-flex align-items-center justify-content-center">
+    <div class="card shadow p-4" style="max-width: 400px; width: 100%;">
+        <div class="text-center mb-4">
+            <h4 class="mt-2">Bem-Vindo!</h4>
+            <p class="text-muted small">Conecte-se aos seus investimentos</p>
+        </div>
+
+        <form asp-action="Login" method="post">
+            <div class="mb-3">
+                <label for="login" class="form-label">Usuário</label>
+                <input name="login" id="login" class="form-control" placeholder="Entre com seu usuário" required />
+            </div>
+
+            <div class="mb-3">
+                <label for="senha" class="form-label">Senha</label>
+                <input name="senha" id="senha" type="password" class="form-control" placeholder="••••••••" required />
+            </div>
+
+            <div class="d-grid">
+                <button type="submit" class="btn btn-primary">Acessar</button>
+            </div>
+        </form>
+
+        <div class="text-center mt-3">
+            <small>Novo na plataforma? <a href="/Usuario/Create" class="text-decoration-none">Crie sua conta</a></small>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const erro = '@TempData["erro"]';
+            const cadastro = '@TempData["cadastro"]';
+
+            const duration = 3000;
+
+            if (erro === 'True') {
+                const toast = Toastify({
+                    text: "Usuário ou senha inválidos.",
+                    duration: duration,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#dc3545",
+                    close: true,
+                    stopOnFocus: true
+                });
+                toast.showToast();
+
+                const toastElem = document.querySelectorAll(".toastify.on")[1] || document.querySelector(".toastify.on");
+                const progress = document.createElement("div");
+                progress.classList.add("progress-bar");
+                progress.style.animationDuration = duration + "ms";
+                toastElem.appendChild(progress);
+            }
+
+            if (cadastro === 'True') {
+                const toast = Toastify({
+                    text: "Usuário cadastrado com sucesso, faça seu login!",
+                    duration: duration,
+                    gravity: "top",
+                    position: "right",
+                    backgroundColor: "#198754",
+                    close: true,
+                    stopOnFocus: true
+                });
+                toast.showToast();
+
+                const toastElem = document.querySelectorAll(".toastify.on")[1] || document.querySelector(".toastify.on");
+                const progress = document.createElement("div");
+                progress.classList.add("progress-bar");
+                progress.style.animationDuration = duration + "ms";
+                toastElem.appendChild(progress);
+            }
+        });
+    </script>
+}

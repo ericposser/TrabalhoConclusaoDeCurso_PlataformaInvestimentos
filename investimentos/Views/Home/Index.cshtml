@@ -1,0 +1,472 @@
+﻿@{
+    ViewData["Title"] = "Resumo";
+
+    var labels = (string[])(ViewBag.ChartLabels ?? Array.Empty<string>());
+    var dataDec = (decimal[])(ViewBag.ChartData ?? Array.Empty<decimal>());
+    var totalGeral = (decimal)(ViewBag.TotalGeral ?? 0m);
+
+    var valorAcoes = (decimal)(ViewBag.ValorAcoes ?? 0m);
+    var valorFiis = (decimal)(ViewBag.ValorFiis ?? 0m);
+    var valorCriptos = (decimal)(ViewBag.ValorCriptos ?? 0m);
+    var valorRendaFixa = (decimal)(ViewBag.ValorRendaFixa ?? 0m);
+
+    // Cores VIBRANTES para o gráfico (sem preto/cinza)
+    var chartColors = new[] { "#2563eb", "#10b981", "#f59e0b", "#ef4444" };
+    var chartColorsJson = System.Text.Json.JsonSerializer.Serialize(chartColors);
+
+    var labelsJson = System.Text.Json.JsonSerializer.Serialize(labels);
+    var dataJson = System.Text.Json.JsonSerializer.Serialize(dataDec.Select(d => (double)d));
+}
+
+
+
+<div style="transform: scale(0.95); transform-origin: top center;">
+
+    <div class="alert alert-secondary rounded-4 shadow-sm">
+        <h4 class="mb-0">Bem-vindo, @User.Identity.Name!</h4>
+    </div>
+
+    <div style="border-bottom: 1px solid rgba(0,0,0,0.08);"></div>
+
+    <div class="container py-4">
+        <div class="row gx-4 gy-4 justify-content-center">
+            <!-- Chart Menor e Quadrado -->
+            <div class="col-12 col-lg-5 mb-4 d-flex align-items-center justify-content-center">
+                <div class="card shadow-lg border-0 rounded-4 p-4 text-center glass-card animate-fade"
+                     style="width:400px; height:400px; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                    <h6 class="card-title mb-3 d-flex align-items-center justify-content-center gap-2 small">
+                        <i data-lucide="pie-chart"></i>
+                        <span>Distribuição (%)</span>
+                    </h6>
+                    @if (totalGeral <= 0)
+                    {
+                        <div class="text-muted small">Sem dados.</div>
+                    }
+                    else
+                    {
+                        <div class="ratio ratio-1x1 mx-auto" style="max-width: 260px;">
+                            <canvas id="portfolioPie"></canvas>
+                        </div>
+                        <div class="mt-3 d-flex flex-wrap justify-content-center gap-3">
+                            @for (int i = 0; i < labels.Length; i++)
+                            {
+                                <div class="d-inline-flex align-items-center gap-2">
+                                    <span class="legend-dot" style="background:@chartColors[i]"></span>
+                                    <span class="fw-semibold" style="color:#374151">@labels[i]</span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+
+            <!-- Card Total Investido (MAIS LARGO) -->
+            <div class="col-12 col-lg-7" align-self-start style="margin-top: 80px;">
+                <div class="card total-card shadow-lg border-0 rounded-4 p-4 pb-4 animate-fade">
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="d-flex align-items-center gap-2">
+                            <i data-lucide="wallet" class="text-dark fs-4"></i>
+                            <h4 class="m-0 fw-bold text-dark" style="color:#111827">Total investido</h4>
+                        </div>
+                        <span class="badge bg-light text-dark fw-semibold px-3 py-2">
+                            @DateTime.Now.ToString("dd/MM/yyyy")
+                        </span>
+                    </div>
+                    <div class="display-6 fw-bold mt-3 mb-3 text-dark" style="color:#1a1a1a">
+                        @totalGeral.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
+                    </div>
+                    <hr class="soft-divider my-3">
+
+                    <div class="row row-cols-2 row-cols-md-2 row-cols-xl-4 g-2">
+                        <div class="col">
+                            <div class="mini-tile animate-tile border-0">
+                                <div class="mini-tile__head">
+                                    <i data-lucide="line-chart"></i><span>Ações</span>
+                                </div>
+                                <div class="mini-tile__value text-dark" style="color:#1a1a1a">
+                                    @valorAcoes.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="mini-tile animate-tile border-0">
+                                <div class="mini-tile__head">
+                                    <i data-lucide="building"></i><span>FIIs</span>
+                                </div>
+                                <div class="mini-tile__value text-dark" style="color:#1a1a1a">
+                                    @valorFiis.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="mini-tile animate-tile border-0">
+                                <div class="mini-tile__head">
+                                    <i data-lucide="circle-dollar-sign"></i><span>Criptos</span>
+                                </div>
+                                <div class="mini-tile__value text-dark" style="color:#1a1a1a">
+                                    @valorCriptos.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col">
+                            <div class="mini-tile animate-tile border-0">
+                                <div class="mini-tile__head">
+                                    <i data-lucide="banknote"></i><span>Renda Fixa</span>
+                                </div>
+                                <div class="mini-tile__value text-dark" style="color:#1a1a1a">
+                                    @valorRendaFixa.ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR"))
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="border-bottom: 1px solid rgba(0,0,0,0.08);"></div>
+
+            <div class="card shadow-lg border-0 rounded-4">
+                <div style="width: 100%;" class="card-body">
+                    <h4 class="mb-3 fw-semibold">
+                        <i data-lucide="trending-up" class="me-2"></i> Evolução Patrimonial
+                    </h4>
+                    <canvas id="evoChart" style="width: 100%; height: 200px;"></canvas>
+                </div>
+            </div>
+
+            <div style="border-bottom: 1px solid rgba(0,0,0,0.08);"></div>
+            
+            @{
+                var ultimos = (IEnumerable<dynamic>)(ViewBag.UltimosLanc ?? Array.Empty<object>());
+                var quantidades = (Dictionary<string, int>)(ViewBag.QuantidadesPorTipo ?? new Dictionary<string, int>());
+            }
+            <div class="row gx-4 mt-4">
+
+                <div class="col-12 col-lg-6">
+                    <div class="card shadow-lg border-0 rounded-4 w-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h4 class="fw-semibold mb-0 d-flex align-items-center gap-2">
+                                    <i data-lucide="clock-8"></i> Últimas movimentações
+                                </h4>
+                                <a asp-controller="Lancamento" asp-action="Index"
+                                   class="btn btn-outline-dark rounded-pill fw-semibold px-3">
+                                    VER TODAS <i data-lucide="arrow-right" class="ms-1"></i>
+                                </a>
+                            </div>
+
+                            <hr class="my-3"/>
+
+                            @if (!ultimos.Any())
+                            {
+                                <div class="text-muted small my-auto text-center">Você ainda não possui movimentações.</div>
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-column gap-3">
+                                    @foreach (var m in ultimos)
+                                    {
+                                        var isEntrada = string.Equals((string)m.Movimentacao, "Compra", StringComparison.OrdinalIgnoreCase);
+                                        var badgeClass = isEntrada ? "bg-success" : "bg-danger";
+                                        var badgeText = isEntrada ? "ENTRADA" : "SAÍDA";
+                                        <div class="border rounded-4 shadow-sm overflow-hidden">
+                                            <div class="d-flex align-items-center justify-content-between px-3 py-2"
+                                                 style="background:#fafafa;">
+                                                <div class="fw-semibold text-uppercase text-primary text-truncate"
+                                                     title="@m.Produto">
+                                                    @m.Produto
+                                                </div>
+                                                <div class="text-muted small">
+                                                    @(((DateTime)m.Data).ToString("dd/MM/yyyy"))
+                                                </div>
+                                            </div>
+
+                                            <div class="px-3 py-2 d-flex align-items-center justify-content-between flex-wrap">
+                                                <div class="d-flex align-items-center gap-2">
+                                                    <span class="fw-semibold">Valor total:</span>
+                                                    <span class="fw-semibold">
+                                            @(((decimal)m.ValorTotal).ToString("C", System.Globalization.CultureInfo.GetCultureInfo("pt-BR")))
+                                        </span>
+                                                </div>
+                                                <span class="badge rounded-pill @badgeClass px-3 py-2 fw-semibold">
+                                        @badgeText
+                                    </span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-12 col-lg-6" style="height: 400px;">
+                    <div class="card shadow-lg border-0 rounded-4 w-100">
+                        <div class="card-body d-flex flex-column">
+                            <div class="d-flex align-items-center justify-content-between">
+                                <h4 class="fw-semibold mb-0 d-flex align-items-center gap-2">
+                                    <i data-lucide="package-check"></i> Quantidade de Ativos
+                                </h4>
+                            </div>
+
+                            <hr class="my-3"/>
+
+                            @if (!quantidades.Any() || quantidades.Values.All(v => v == 0))
+                            {
+                                <div class="text-muted small my-auto text-center">Você ainda não possui ativos cadastrados.</div>
+                            }
+                            else
+                            {
+                                <div class="d-flex flex-column gap-3">
+                                    @foreach (var item in quantidades)
+                                    {
+                                        // Define o ícone com base na chave (nome do ativo)
+                                        var icon = item.Key switch {
+                                            "Ações" => "line-chart",
+                                            "FIIs" => "building",
+                                            "Criptomoedas" => "circle-dollar-sign",
+                                            "Renda Fixa" => "banknote",
+                                            _ => "package"
+                                        };
+
+                                        <div class="d-flex justify-content-between align-items-center p-3 rounded-3" style="background-color: #f8f9fa; border: 1px solid #e9ecef;">
+                                            <div class="d-flex align-items-center gap-3">
+                                                <i data-lucide="@icon" class="text-primary"></i>
+                                                <span class="fw-semibold text-dark fs-6">@item.Key</span>
+                                            </div>
+                                            <span class="badge bg-dark rounded-pill px-3 py-2 fs-6">@item.Value</span>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        lucide.createIcons();
+
+        (function () {
+            // Meses fixos (pt-BR)
+            const monthLabels = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
+
+            // Dados vindos do backend (podem ter menos de 12 pontos)
+            const rawData = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(ViewBag.EvoData ?? new double[0]));
+
+            // Normaliza para 12 meses: preenche com nulls (não desenha ponto)
+            const data = monthLabels.map((_, i) => (i < rawData.length ? rawData[i] : null));
+
+            const canvas = document.getElementById('evoChart');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            if (window._evoChart) {
+                window._evoChart.destroy();
+                window._evoChart = null;
+            }
+
+            const gradient = (() => {
+                const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                g.addColorStop(0, 'rgba(0,0,0,0.25)'); // preto com transparência no topo
+                g.addColorStop(1.0, 'rgba(0,0,0,0.00)'); // transparente embaixo
+                return g;
+            })();
+
+            borderColor: '#000000',
+
+                window._evoChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: monthLabels,
+                        datasets: [{
+                            data,
+                            borderColor: '#000000',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            tension: 0.4,
+                            fill: false,
+                            pointRadius: 0,
+                            pointHitRadius: 8
+                        }]
+                    },
+                    options: {
+                        responsive: false,
+                        maintainAspectRatio: false,
+                        animation: false,
+                        plugins: {
+                            legend: {display: false},
+                            tooltip: {
+                                callbacks: {
+                                    label: (ctx) => {
+                                        const v = ctx.parsed.y ?? 0;
+                                        return ' R$ ' + v.toLocaleString('pt-BR', {
+                                            minimumFractionDigits: 2,
+                                            maximumFractionDigits: 2
+                                        });
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            x: {
+                                grid: {color: 'rgba(0,0,0,0.06)'},
+                                ticks: {autoSkip: false} // mostra todos os meses
+                            },
+                            y: {
+                                display: false,       // <-- esconde totalmente o eixo Y
+                                grid: {display: false},
+                                ticks: {display: false}
+                            }
+                        },
+                        layout: {padding: {top: 12, right: 8, left: 8, bottom: 0}}
+                    }
+                });
+        })();
+
+        const labels = @Html.Raw(labelsJson);
+        const dataVals = @Html.Raw(dataJson);
+        const chartColors = @Html.Raw(chartColorsJson);
+
+        if (dataVals && dataVals.reduce((a, b) => a + b, 0) > 0) {
+            const total = dataVals.reduce((a, b) => a + b, 0);
+
+            new Chart(document.getElementById('portfolioPie'), {
+                type: 'doughnut',
+                data: {
+                    labels,
+                    datasets: [{
+                        data: dataVals,
+                        borderWidth: 4,
+                        borderColor: '#fff',
+                        backgroundColor: chartColors
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    cutout: '65%',
+                    animation: {animateScale: true},
+                    plugins: {
+                        legend: {display: false},
+                        tooltip: {
+                            backgroundColor: '#fff',
+                            borderColor: '#000000',
+                            borderWidth: 2,
+                            titleColor: '#000000',
+                            bodyColor: '#374151',
+                            padding: 14,
+                            callbacks: {
+                                label: (ctx) => {
+                                    const v = ctx.parsed;
+                                    const pct = total ? (v / total * 100) : 0;
+                                    return `${ctx.label}: ${pct.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+}
+
+<style>
+    body {
+        background: linear-gradient(120deg, #f1f5f9 0%, #e7eaf3 100%);
+        min-height: 100vh;
+    }
+
+    .total-card {
+        background: rgba(255, 255, 255, 0.97);
+        box-shadow: 0 6px 24px 0 rgba(0, 0, 0, 0.06);
+        transition: box-shadow 0.2s;
+        min-width: 420px;
+        max-width: 900px;
+        margin-left: auto;
+    }
+
+    .card.total-card {
+        margin-bottom: 0 !important;
+    }
+
+    .glass-card {
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(6px);
+        box-shadow: 0 6px 24px 0 rgba(0, 0, 0, 0.07);
+        border: 1px solid rgba(0, 0, 0, 0.08);
+        transition: box-shadow 0.2s;
+    }
+
+    .soft-divider {
+        height: 2px;
+        background: linear-gradient(to right, transparent, rgba(17, 24, 39, .13), transparent);
+        border: 0;
+        opacity: .9;
+    }
+
+    .mini-tile {
+        border-radius: 18px;
+        padding: 1rem 1rem;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.98);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+        transition: box-shadow 0.2s;
+    }
+
+    .mini-tile__head {
+        display: flex;
+        align-items: center;
+        gap: .5rem;
+        color: #6b7280;
+        font-weight: 600;
+        font-size: .92rem;
+        margin-bottom: .2rem;
+    }
+
+    .mini-tile__value {
+        font-size: 1.13rem;
+        font-weight: 700;
+        color: #1a1a1a;
+    }
+
+    .legend-dot {
+        width: 14px;
+        height: 14px;
+        border-radius: 50%;
+        box-shadow: 0 1px 5px rgba(0, 0, 0, 0.08);
+        display: inline-block;
+        border: 2px solid #fff;
+    }
+
+    .text-dark {
+        color: #111827 !important;
+    }
+
+    .animate-fade {
+        animation: fadein 0.7s ease;
+    }
+
+    .animate-tile:hover {
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.11);
+    }
+
+    .row > [class*='col-'] {
+        margin-bottom: 0 !important;
+    }
+
+    .row.gx-4 {
+        --bs-gutter-x: 2rem;
+    }
+
+    .row.gy-4 {
+        --bs-gutter-y: 2rem;
+    }
+
+</style>
